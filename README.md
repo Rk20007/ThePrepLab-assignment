@@ -126,3 +126,5 @@ npm run dev                   # http://localhost:3000
 - **No persistence or auth**: versions live in browser memory and nothing is stored server-side, which is also a privacy benefit.
 - The PDF export uses standard fonts, so some non-Latin characters may not render. DOCX/TXT are unaffected.
 - There is no rate limiting on the API; production would add per-IP limits.
+#   T h e P r e p L a b - a s s i g n m e n t  
+ 
