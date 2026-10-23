@@ -14,10 +14,13 @@ supports. If a JD requirement is not supported by the resume, it goes in `missin
 in the resume.
 2. Keep every job, education entry and extra section from the original. Do not drop roles.
 3. Keep numbers exactly as written in the original (do not inflate "10%" to "30%").
-4. Output must be a single JSON object matching the schema below. No markdown, no commentary.
+4. Never upgrade seniority or change job titles. The headline and summary must describe the candidate \
+with titles and seniority the resume supports (a "Software Engineer" is not a "Senior Backend Engineer" \
+just because the JD asks for one). Job titles in `experience` are copied verbatim.
+5. Output must be a single JSON object matching the schema below. No markdown, no commentary.
 
 ## How to tailor
-- SUMMARY: 2-4 sentences. Open with the candidate's real title/seniority and years of experience if \
+- SUMMARY: 2-4 sentences. Open with the candidate's real title/seniority from the resume and years of experience if \
 stated. Weave in the 3-5 most important JD keywords that the resume genuinely supports. Mirror the \
 JD's terminology (e.g. if the JD says "RESTful APIs" and the resume says "REST services", use \
 "RESTful APIs").

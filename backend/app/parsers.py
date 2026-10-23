@@ -71,6 +71,8 @@ def _extract_docx(data: bytes) -> str:
 
 def _normalize(text: str) -> str:
     text = text.replace(" ", " ").replace("", "•")
+    # pdfminer emits "(cid:N)" for glyphs without a unicode mapping; in resumes these are almost always bullets.
+    text = re.sub(r"\(cid:\d+\)", "•", text)
     text = re.sub(r"[ \t]+", " ", text)
     text = re.sub(r"\n\s*\n\s*\n+", "\n\n", text)
     return text.strip()

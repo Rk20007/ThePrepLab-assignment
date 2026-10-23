@@ -145,3 +145,9 @@ def test_export(fmt, magic):
     assert res.status_code == 200
     assert res.content.startswith(magic)
     assert f"Jane-Doe-tailored.{fmt}" in res.headers["content-disposition"]
+
+
+def test_pdf_cid_glyphs_become_bullets():
+    from app.parsers import _normalize
+
+    assert _normalize("(cid:127) Built APIs\n(cid:127) Shipped") == "• Built APIs\n• Shipped"
