@@ -32,7 +32,7 @@ download as PDF, DOCX or TXT.
 |---|---|
 | Frontend | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, `diff` |
 | Backend | Python 3.13, FastAPI, Pydantic v2, httpx, pdfplumber, python-docx, ReportLab |
-| LLM | **Google Gemini `gemini-2.5-flash`** (default) via the REST API in JSON mode. Groq (`llama-3.3-70b-versatile`) is also supported by setting `LLM_PROVIDER=groq` |
+| LLM | **Google Gemini `gemini-3.5-flash`** (default) via the REST API in JSON mode. Groq (`llama-3.3-70b-versatile`) is also supported by setting `LLM_PROVIDER=groq` |
 | Hosting | Vercel (frontend) + Render (backend) |
 | Tests | pytest (API, validation, export and scoring tests with a fake LLM) |
 

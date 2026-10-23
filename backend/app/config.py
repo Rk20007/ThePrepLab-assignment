@@ -9,10 +9,12 @@ class Settings(BaseSettings):
 
     llm_provider: Literal["gemini", "groq"] = "gemini"
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.5-flash"
+    # Tried in order when the primary model is overloaded or retired.
+    gemini_fallback_models: str = "gemini-3.5-flash-lite"
     groq_api_key: str = ""
     groq_model: str = "llama-3.3-70b-versatile"
-    llm_timeout_seconds: float = 90.0
+    llm_timeout_seconds: float = 60.0
 
     allowed_origins: str = "http://localhost:3000"
     max_upload_mb: int = 5
@@ -24,6 +26,10 @@ class Settings(BaseSettings):
     @property
     def origins(self) -> list[str]:
         return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
+
+    @property
+    def gemini_fallbacks(self) -> list[str]:
+        return [m.strip() for m in self.gemini_fallback_models.split(",") if m.strip()]
 
     @property
     def max_upload_bytes(self) -> int:
