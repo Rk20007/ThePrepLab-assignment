@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 
@@ -17,6 +17,8 @@ from .schemas import (
     CustomizeResponse,
     ExportRequest,
     Scores,
+    KeyCheckResponse,
+    Ping,
     Section,
     Tailoring,
 )
@@ -36,11 +38,15 @@ app.add_middleware(
 
 @app.exception_handler(LLMError)
 async def llm_error_handler(_: Request, exc: LLMError) -> JSONResponse:
-    return JSONResponse(status_code=exc.status_code, content={"detail": str(exc)})
+    return JSONResponse(status_code=exc.status_code, content={"detail": str(exc), "code": exc.code})
 
 
-def get_llm(s: Annotated[Settings, Depends(get_settings)]) -> LLMClient:
-    return LLMClient(s)
+def get_llm(
+    s: Annotated[Settings, Depends(get_settings)],
+    x_gemini_api_key: Annotated[str | None, Header(max_length=200)] = None,
+) -> LLMClient:
+    """Visitors may bring their own Gemini key (set in the UI's Settings); it is never stored or logged."""
+    return LLMClient(s, user_api_key=(x_gemini_api_key or "").strip() or None)
 
 
 def validate_job_description(text: str, s: Settings) -> str:
@@ -63,6 +69,13 @@ def parse_sections(raw: str) -> list[Section]:
     if not sections:
         raise HTTPException(422, "Choose at least one section to customize.")
     return sections
+
+
+@app.post("/api/check-key", response_model=KeyCheckResponse)
+async def check_key(llm: Annotated[LLMClient, Depends(get_llm)]) -> KeyCheckResponse:
+    """Make a tiny real request so quota and billing problems surface too, not just invalid keys."""
+    await llm.generate('Reply with the JSON {"ok": true}.', "ping", Ping, temperature=0)
+    return KeyCheckResponse(ok=True, model=llm.model, source="user" if llm.uses_user_key else "server")
 
 
 @app.get("/api/health")

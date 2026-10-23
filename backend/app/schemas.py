@@ -75,6 +75,16 @@ class CoverLetterRequest(BaseModel):
     resume: Resume
 
 
+class Ping(BaseModel):
+    ok: bool
+
+
+class KeyCheckResponse(BaseModel):
+    ok: bool
+    model: str
+    source: Literal["user", "server"]
+
+
 class CoverLetterResponse(BaseModel):
     cover_letter: str
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { generateCoverLetter, saveBlob, type Resume } from "@/lib/api";
+import { ErrorAlert } from "./ErrorAlert";
 import { Spinner } from "./Spinner";
 
 interface Props {
@@ -13,7 +14,7 @@ interface Props {
 
 export function CoverLetter({ jobDescription, resume, letter, onGenerated }: Props) {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
   const [copied, setCopied] = useState(false);
 
   async function generate() {
@@ -22,7 +23,7 @@ export function CoverLetter({ jobDescription, resume, letter, onGenerated }: Pro
     try {
       onGenerated(await generateCoverLetter(jobDescription, resume));
     } catch (err) {
-      setError((err as Error).message);
+      setError(err as Error);
     } finally {
       setLoading(false);
     }
@@ -45,7 +46,11 @@ export function CoverLetter({ jobDescription, resume, letter, onGenerated }: Pro
           {loading && <Spinner />}
           {loading ? "Writing…" : "Generate cover letter"}
         </button>
-        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+        {error && (
+          <div className="mx-auto mt-4 max-w-md text-left">
+            <ErrorAlert error={error} />
+          </div>
+        )}
       </div>
     );
   }
@@ -67,7 +72,11 @@ export function CoverLetter({ jobDescription, resume, letter, onGenerated }: Pro
           Regenerate
         </button>
       </div>
-      {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
+      {error && (
+        <div className="mb-3">
+          <ErrorAlert error={error} />
+        </div>
+      )}
       <div className="mx-auto max-w-[800px] whitespace-pre-wrap rounded-xl border border-line bg-paper px-6 py-8 leading-relaxed sm:px-10">
         {letter}
       </div>

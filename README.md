@@ -13,7 +13,7 @@ download as PDF, DOCX or TXT.
 - **Resume upload**: drag-and-drop or browse for PDF/DOCX. Shows the file name and size, and validates type and size (max 5 MB) on both the client and the server. Text is extracted on the backend with `pdfplumber` and `python-docx` (table-based DOCX templates included).
 - **LLM customization**: the model rewrites the summary, puts JD-relevant skills first, and reorders and rephrases experience bullets. It also returns matched skills, **missing keywords**, and a short changelog explaining what it changed.
 - **Output**: the tailored resume renders as a clean document, with skills that match the JD highlighted. It downloads as **PDF**, **DOCX** or **TXT**, generated server-side from structured data so the formatting is consistent.
-- **Error handling**: clear messages for invalid or corrupted files, scanned PDFs with no text, oversized files, LLM timeouts, rate limits (429), malformed LLM output (retried once automatically) and an unreachable or cold-starting server.
+- **Error handling**: API-key problems (invalid key, quota/free-tier limit exhausted, billing or permission issues, no key configured) get a specific message plus an **Open Settings** button. There are also clear messages for invalid or corrupted files, scanned PDFs with no text, oversized files, LLM timeouts, rate limits (429), malformed LLM output (retried once automatically) and an unreachable or cold-starting server.
 
 ### Bonus
 | Feature | How |
@@ -24,6 +24,7 @@ download as PDF, DOCX or TXT.
 | Multiple versions | Each generation becomes a version (v1, v2…); switch between them to compare |
 | Section-wise customization | Choose any of Summary / Skills / Experience; unselected sections are copied verbatim |
 | Cover letter | One-click cover letter from the tailored resume + JD; copy or download it |
+| Bring your own API key | The **Settings** button (top right) lets a visitor paste their own Gemini key, test it with a real call, and use it instead of the server's key. The key is stored only in their browser and sent per request in an `X-Gemini-Api-Key` header; it is never stored or logged |
 | Dark mode, responsive | Works from a 375 px phone up to desktop |
 
 ## Tech stack
@@ -49,6 +50,7 @@ download as PDF, DOCX or TXT.
 │                       validate JSON → score      │
 │ POST /api/cover-letter                           │
 │ POST /api/export      PDF / DOCX / TXT           │
+│ POST /api/check-key   test a Gemini key          │
 │ GET  /api/health                                 │
 └───────────────┬──────────────────────────────────┘
                 │ HTTPS (JSON mode)
@@ -126,5 +128,7 @@ npm run dev                   # http://localhost:3000
 - **No persistence or auth**: versions live in browser memory and nothing is stored server-side, which is also a privacy benefit.
 - The PDF export uses standard fonts, so some non-Latin characters may not render. DOCX/TXT are unaffected.
 - There is no rate limiting on the API; production would add per-IP limits.
-#   T h e P r e p L a b - a s s i g n m e n t  
+- A user-supplied API key is kept in `localStorage`. That is convenient, but it is readable by any script on the page, so it is only suitable for a personal or demo tool.
+#   T h e P r e p L a b - a s s i g n m e n t 
+ 
  

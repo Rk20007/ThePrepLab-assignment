@@ -22,19 +22,28 @@ RETRY_DELAYS_SECONDS = (2,)
 
 
 class LLMError(RuntimeError):
-    """A failure talking to the LLM, with a message safe to show to end users."""
+    """A failure talking to the LLM, with a message safe to show to end users.
 
-    def __init__(self, message: str, status_code: int = 502):
+    `code` lets the frontend react to key problems (e.g. by offering to open Settings).
+    """
+
+    def __init__(self, message: str, status_code: int = 502, code: str = "llm_error"):
         super().__init__(message)
         self.status_code = status_code
+        self.code = code
+
+
+SETTINGS_HINT = "You can add your own Gemini API key in Settings (top right)."
 
 
 class LLMClient:
-    def __init__(self, settings: Settings):
-        self.provider = settings.llm_provider
+    def __init__(self, settings: Settings, user_api_key: str | None = None):
+        """`user_api_key` is a Gemini key supplied by the visitor; it takes precedence over the server's."""
+        self.provider = "gemini" if user_api_key else settings.llm_provider
         self.timeout = settings.llm_timeout_seconds
+        self.uses_user_key = bool(user_api_key)
         if self.provider == "gemini":
-            self.api_key = settings.gemini_api_key
+            self.api_key = user_api_key or settings.gemini_api_key
             self.models = [settings.gemini_model, *settings.gemini_fallbacks]
         else:
             self.api_key = settings.groq_api_key
@@ -45,7 +54,7 @@ class LLMClient:
     async def generate(self, system: str, prompt: str, schema: type[T], temperature: float = 0.4) -> T:
         """Call the LLM and parse its JSON reply into `schema`, retrying once on malformed output."""
         if not self.api_key:
-            raise LLMError("The server has no LLM API key configured.", status_code=500)
+            raise LLMError(f"No AI API key is configured on the server. {SETTINGS_HINT}", 503, "no_key")
 
         last_error: Exception | None = None
         for _ in range(2):
@@ -108,20 +117,16 @@ class LLMClient:
                     continue
                 except httpx.HTTPError as exc:
                     raise LLMError("Couldn't reach the AI service. Please try again shortly.") from exc
-                if res.status_code not in RETRYABLE_STATUSES | {404}:
+                # Free-tier quotas are per model, so a 429 is also worth a fallback.
+                if res.status_code not in RETRYABLE_STATUSES | {404, 429}:
                     break
                 log.warning("%s unavailable (%s), trying next model", model, res.status_code)
         self.model = model
 
         if res is None:
             raise LLMError("The AI took too long to respond. Please try again.", 504)
-        if res.status_code == 429:
-            raise LLMError("The AI service is rate-limited right now. Please wait a minute and retry.", 429)
-        if res.status_code in RETRYABLE_STATUSES:
-            raise LLMError("The AI service is overloaded right now. Please try again in a minute.", 503)
         if res.status_code >= 400:
-            log.error("LLM error %s: %s", res.status_code, res.text[:500])
-            raise LLMError("The AI service returned an error. Please try again.")
+            raise self._error_for(res)
 
         data = res.json()
         try:
@@ -132,6 +137,37 @@ class LLMClient:
         except (KeyError, IndexError) as exc:
             log.error("Unexpected LLM payload: %s", str(data)[:500])
             raise LLMError("The AI declined or returned an empty response. Please try again.") from exc
+
+
+    def _error_for(self, res: httpx.Response) -> LLMError:
+        """Translate a provider error response into a message the user can act on."""
+        body = res.text
+        log.error("LLM error %s: %s", res.status_code, body[:500])
+        whose = "Your" if self.uses_user_key else "The server's"
+        fix = "Update it in Settings (top right)." if self.uses_user_key else SETTINGS_HINT
+
+        if "API_KEY_INVALID" in body or "API key not valid" in body or res.status_code == 401:
+            return LLMError(f"{whose} Gemini API key is invalid. {fix}", 401, "invalid_key")
+        if res.status_code == 429:
+            if "quota" in body.lower() or "RESOURCE_EXHAUSTED" in body:
+                return LLMError(
+                    f"{whose} Gemini API key has run out of quota (free-tier limit reached or billing "
+                    f"not set up). Wait for the quota to reset or use another key. {fix}",
+                    429,
+                    "quota_exceeded",
+                )
+            return LLMError("The AI service is rate-limited right now. Please wait a minute and retry.", 429)
+        if res.status_code == 403 or "billing" in body.lower() or "FAILED_PRECONDITION" in body:
+            return LLMError(
+                f"{whose} Gemini API key was rejected (permission or billing issue on the Google account). {fix}",
+                403,
+                "key_rejected",
+            )
+        if res.status_code in RETRYABLE_STATUSES:
+            return LLMError("The AI service is overloaded right now. Please try again in a minute.", 503)
+        if res.status_code == 404:
+            return LLMError("The configured AI model is no longer available. Please contact the site owner.")
+        return LLMError("The AI service returned an error. Please try again.")
 
 
 def _strip_fences(text: str) -> str:

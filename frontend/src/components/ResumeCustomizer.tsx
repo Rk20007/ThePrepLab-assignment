@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { customizeResume, JD_MIN_CHARS, SECTIONS, type CustomizeResult, type Section } from "@/lib/api";
+import { ErrorAlert } from "./ErrorAlert";
 import { JobDescriptionInput } from "./JobDescriptionInput";
 import { ResultsPanel, type Version } from "./ResultsPanel";
 import { ResumeUpload } from "./ResumeUpload";
@@ -25,7 +26,7 @@ export function ResumeCustomizer() {
   const [jd, setJd] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [sections, setSections] = useState<Section[]>([...SECTIONS]);
-  const [errors, setErrors] = useState<{ jd?: string; file?: string; form?: string }>({});
+  const [errors, setErrors] = useState<{ jd?: string; file?: string; form?: Error }>({});
   const [loading, setLoading] = useState(false);
   const [versions, setVersions] = useState<Version[]>([]);
   const [activeId, setActiveId] = useState<number | null>(null);
@@ -42,7 +43,7 @@ export function ResumeCustomizer() {
     if (!length) next.jd = "Please paste a job description.";
     else if (length < JD_MIN_CHARS) next.jd = `The job description looks too short (min ${JD_MIN_CHARS} characters).`;
     if (!file) next.file = "Please upload your resume.";
-    if (!sections.length) next.form = "Choose at least one section to customize.";
+    if (!sections.length) next.form = new Error("Choose at least one section to customize.");
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -64,7 +65,7 @@ export function ResumeCustomizer() {
       setVersions((prev) => [...prev, version]);
       setActiveId(version.id);
     } catch (err) {
-      setErrors({ form: (err as Error).message });
+      setErrors({ form: err as Error });
     } finally {
       setLoading(false);
     }
@@ -118,11 +119,7 @@ export function ResumeCustomizer() {
           <p className="mt-1 text-xs text-muted">Unselected sections are kept as written.</p>
         </fieldset>
 
-        {errors.form && (
-          <div role="alert" className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-            {errors.form}
-          </div>
-        )}
+        {errors.form && <ErrorAlert error={errors.form} />}
 
         <button type="submit" disabled={loading} className="btn-primary w-full py-2.5">
           {loading && <Spinner />}

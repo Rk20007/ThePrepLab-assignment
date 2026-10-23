@@ -136,7 +136,7 @@ def test_llm_failure_is_reported_cleanly():
     finally:
         app.dependency_overrides.clear()
     assert res.status_code == 429
-    assert res.json() == {"detail": "rate limited"}
+    assert res.json() == {"detail": "rate limited", "code": "llm_error"}
 
 
 @pytest.mark.parametrize(("fmt", "magic"), [("pdf", b"%PDF"), ("docx", b"PK"), ("txt", b"Jane Doe")])
