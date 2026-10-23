@@ -104,7 +104,7 @@ pytest                        # run tests (no API key needed)
 ```bash
 cd frontend
 npm install
-cp .env.example .env.local    # NEXT_PUBLIC_API_URL=http://localhost:8000
+cp .env.example .env.local    # NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 npm run dev                   # http://localhost:3000
 ```
 

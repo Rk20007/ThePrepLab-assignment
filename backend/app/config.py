@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     groq_model: str = "llama-3.3-70b-versatile"
     llm_timeout_seconds: float = 60.0
 
-    allowed_origins: str = "http://localhost:3000"
+    allowed_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     max_upload_mb: int = 5
 
     jd_min_chars: int = 100

@@ -1,6 +1,6 @@
 import { getApiKey } from "./apiKey";
 
-export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
 
 export const SECTIONS = ["summary", "skills", "experience"] as const;
 export type Section = (typeof SECTIONS)[number];
@@ -87,7 +87,7 @@ async function request(path: string, init: RequestInit, apiKey = getApiKey()): P
       throw new Error("The request timed out. Please try again.");
     }
     throw new Error(
-      "Couldn't reach the server. If this is the first request in a while, the server may be waking up — please retry in a few seconds.",
+      `Couldn't reach the server (${API_URL}). If this is the first request in a while, it may be waking up — please retry in a few seconds.`,
     );
   }
   if (!res.ok) throw await toApiError(res);
