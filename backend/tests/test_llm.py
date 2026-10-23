@@ -68,3 +68,8 @@ def test_llm_error_response_includes_code():
         app.dependency_overrides.clear()
     assert res.status_code == 401
     assert res.json()["code"] == "invalid_key"
+
+
+def test_origins_ignore_trailing_slash():
+    s = Settings(_env_file=None, allowed_origins="https://app.vercel.app/, http://localhost:3000")
+    assert s.origins == ["https://app.vercel.app", "http://localhost:3000"]

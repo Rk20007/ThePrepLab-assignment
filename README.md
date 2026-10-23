@@ -112,8 +112,10 @@ npm run dev                   # http://localhost:3000
 
 **Backend → Render**
 1. New → Blueprint → select this repo (it uses [render.yaml](render.yaml)). Or create a Web Service with root dir `backend`, build command `pip install -r requirements.txt`, and start command `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
-2. Set the env vars `GEMINI_API_KEY` and `ALLOWED_ORIGINS=https://<your-app>.vercel.app`.
-3. A `Dockerfile` is also included for Cloud Run, Railway or Fly.io.
+2. Set the env vars `GEMINI_API_KEY` and `ALLOWED_ORIGINS=https://<your-app>.vercel.app` (no trailing slash needed). To also allow Vercel preview deployments, set `ALLOWED_ORIGIN_REGEX=https://<your-app>-.*\.vercel\.app`.
+3. A `Dockerfile` is also included for Cloud Run, Railway or Fly.io. The backend also runs as a Vercel Python function (root dir `backend`), but Vercel caps request bodies at 4.5 MB, so set `MAX_UPLOAD_MB=4` there.
+
+> If the UI says **"Couldn't reach the server"** while `/api/health` works, the frontend's origin is missing from `ALLOWED_ORIGINS`. The browser blocks the CORS preflight before the request is sent.
 
 **Frontend → Vercel**
 1. Import the repo and set the **Root Directory** to `frontend`.

@@ -30,6 +30,7 @@ app = FastAPI(title="Resume Customizer API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.origins,
+    allow_origin_regex=settings.allowed_origin_regex or None,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
     expose_headers=["Content-Disposition"],

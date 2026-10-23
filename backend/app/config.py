@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     llm_timeout_seconds: float = 60.0
 
     allowed_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+    # Optional regex for origins that change per deploy, e.g. Vercel previews: https://my-app-.*\.vercel\.app
+    allowed_origin_regex: str | None = None
     max_upload_mb: int = 5
 
     jd_min_chars: int = 100
@@ -25,7 +27,8 @@ class Settings(BaseSettings):
 
     @property
     def origins(self) -> list[str]:
-        return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
+        # Browsers send origins without a trailing slash, so "https://app.vercel.app/" would never match.
+        return [o.strip().rstrip("/") for o in self.allowed_origins.split(",") if o.strip()]
 
     @property
     def gemini_fallbacks(self) -> list[str]:
