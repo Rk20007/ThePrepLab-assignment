@@ -129,6 +129,3 @@ npm run dev                   # http://localhost:3000
 - The PDF export uses standard fonts, so some non-Latin characters may not render. DOCX/TXT are unaffected.
 - There is no rate limiting on the API; production would add per-IP limits.
 - A user-supplied API key is kept in `localStorage`. That is convenient, but it is readable by any script on the page, so it is only suitable for a personal or demo tool.
-#   T h e P r e p L a b - a s s i g n m e n t 
- 
- 
